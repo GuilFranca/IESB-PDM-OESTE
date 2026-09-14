@@ -1,79 +1,72 @@
-# 💻 Prática 05: FlatList e App que Não Esquece
+# 💻 Prática 05: Metas do Semestre (persistência local)
 
-Nesta prática o To-Do ganha lista eficiente e persistência local. **Ainda não** vamos extrair componentes — isso é a Prática 06.
+App **MetasSemestre**: o aluno cadastra metas de estudo, marca como concluídas, remove itens e os dados sobrevivem ao fechar o aplicativo.
 
-## 🎯 Objetivos
+Pasta do projeto Expo: `praticas/pratica05/MetasSemestre`.
 
-* Substituir `.map()` por `FlatList`.
-* Salvar e carregar tarefas com AsyncStorage + `useEffect`.
-* Validar que fechar e reabrir o app mantém os dados.
-
----
-
-## 📦 Fluxo Git
-
-1. Crie a Issue da **Prática 05**.
-2. Branch:
+## Como rodar
 
 ```bash
-git checkout -b feature/pratica05
-```
-
-3. Trabalhe em `praticas/pratica05` (evolua a base da Prática 04).
-
-```bash
+cd praticas/pratica05/MetasSemestre
 npm install
 npx expo start
 ```
 
----
-
-## 🛠️ Parte A — FlatList
-
-1. Remova o `.map()` da lista.
-2. Importe `FlatList` de `react-native`.
-3. Configure:
-
-* `data={tasks}`
-* `keyExtractor={(item) => item.id}`
-* `renderItem={...}` desenhando cada tarefa (card ainda pode ficar inline no `App`)
-
-4. Teste adicionando **muitas** tarefas (15+) e confirme a rolagem suave.
+Abra no **Expo Go** (Android/iOS). Pacotes nativos foram instalados com `npx expo install`.
 
 ---
 
-## 🛠️ Parte B — AsyncStorage
+## Prints
 
-1. Pare o bundler (Ctrl+C) e instale:
+### Lista vazia
 
-```bash
-npx expo install @react-native-async-storage/async-storage
+![Lista vazia](prints/lista-vazia.png)
+
+### Com itens
+
+![Lista com metas](prints/com-itens.png)
+
+### Após reabrir o app
+
+Os mesmos itens reaparecem: a lista foi lida do AsyncStorage na montagem.
+
+![Após reabrir o aplicativo](prints/apos-reabrir.png)
+
+---
+
+## Onde estão os `useEffect`
+
+Tudo fica em `MetasSemestre/App.js`, chave `@metas_semestre`.
+
+1. **Carga (montagem)** — `useEffect` com `[]`. Chama `AsyncStorage.getItem`, faz `JSON.parse` e atualiza o estado `metas`. Erros caem em `try/catch` com `Alert`.
+2. **Salvamento (sempre que a lista muda)** — `useEffect` com `[metas, carregado]`. Depois da carga inicial, grava com `AsyncStorage.setItem` + `JSON.stringify`. O flag `carregado` evita sobrescrever o storage com `[]` antes da leitura terminar.
+
+```javascript
+// CARREGAR — uma vez, quando o App monta
+useEffect(() => {
+  carregarMetas();
+}, []);
+
+// SALVAR — sempre que a lista mudar
+useEffect(() => {
+  if (!carregado) return;
+  salvarMetas();
+}, [metas, carregado]);
 ```
 
-2. Crie `saveTasks` (async): grave a lista com `setItem` + `JSON.stringify`.
-3. Chame `saveTasks` após adicionar e após deletar (com a lista já atualizada).
-4. Crie `loadTasks` (async): leia com `getItem`, faça `JSON.parse` se houver valor, e use `setTasks`.
-5. No `useEffect` com `[]`, chame `loadTasks()` na montagem.
-
-### Teste extremo
-
-Adicione 3 tarefas → feche o app por completo (remover dos recentes) → abra de novo → as tarefas devem continuar lá.
-
 ---
 
-## ✅ Critérios de entrega
+## Organização
 
-* [ ] `FlatList` rolando com muitos itens
-* [ ] Persistência: fechar e reabrir mantém as tarefas
-* [ ] Add e delete continuam funcionando
-* [ ] Issue, branch `feature/pratica05`, commit, push e Pull Request
+| Arquivo | Responsabilidade |
+| :--- | :--- |
+| `App.js` | Estado (`useState`), persistência (`useEffect` + AsyncStorage), cabeçalho e orquestração |
+| `components/MetaInput.js` | `TextInput` + `Pressable` de adicionar (`value`, `onChangeText`, `onAdd`) |
+| `components/MetaList.js` | `FlatList` das metas (`metas`, `onDelete`, `onToggle`) |
 
-### Commit sugerido
+Cada meta é `{ id, texto, criadaEm, concluida }`. O `id` vem de `Date.now().toString()`. Remoção usa `filter` por `id` (array novo, sem `push`/`splice`). Texto vazio dispara `Alert`. Botões usam `Pressable` com `android_ripple`.
 
-```bash
-git add .
-git commit -m "Feat: Adiciona FlatList e AsyncStorage para persistir tarefas"
-git push origin feature/pratica05
-```
+### Desafio extra
 
-Na **Aula 06**, vamos **organizar o código**: extrair o card da tarefa para um componente reutilizável com props.
+- Campo `concluida` (boolean) e estilo riscado (`textDecorationLine: 'line-through'`).
+- Contador no cabeçalho: `X pendentes / Y concluídas`.
