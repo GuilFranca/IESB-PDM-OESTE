@@ -1,3 +1,16 @@
+# 💻 Prática 06 / Atividade Integradora: RotinaIESB
+
+O app da atividade integradora (aulas 02–06) está em `praticas/pratica06/RotinaIESB`.
+
+```bash
+cd praticas/pratica06/RotinaIESB
+npx expo start
+```
+
+Detalhes, prints e mapa dos `useEffect`: veja `RotinaIESB/README.md`.
+
+---
+
 # 💻 Prática 06: Arrumando a Casa (Componentização)
 
 Nesta prática o app **não ganha funcionalidade nova** para o usuário final. O objetivo é melhorar a **qualidade do código**: extrair o visual da tarefa para um componente separado, deixando o `App` mais limpo.
