@@ -5,7 +5,6 @@ import {
   TextInput,
   Pressable,
   StyleSheet,
-  Alert,
   useColorScheme,
   useWindowDimensions,
 } from 'react-native';
@@ -15,6 +14,7 @@ import { useExpenses } from '../store/expenses-context';
 import { useDebounce } from '../hooks/useDebounce';
 import { getColors } from '../constants/theme';
 import { CATEGORIES } from '../constants/categories';
+import { confirmAction } from '../util/confirm';
 
 function TodasDespesas() {
   const navigation = useNavigation();
@@ -37,18 +37,12 @@ function TodasDespesas() {
   }, [expenses, debouncedSearch, categoryFilter]);
 
   function handleClearAll() {
-    Alert.alert(
-      'Limpar tudo',
-      'Deseja apagar todas as despesas? Esta acao nao pode ser desfeita.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Limpar',
-          style: 'destructive',
-          onPress: clearExpenses,
-        },
-      ]
-    );
+    confirmAction({
+      title: 'Limpar tudo',
+      message: 'Deseja apagar todas as despesas? Esta acao nao pode ser desfeita.',
+      confirmText: 'Limpar',
+      onConfirm: clearExpenses,
+    });
   }
 
   return (

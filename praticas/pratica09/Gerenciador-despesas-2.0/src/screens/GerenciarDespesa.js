@@ -1,11 +1,10 @@
-import { useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   Pressable,
   StyleSheet,
-  Alert,
   Modal,
   ScrollView,
   KeyboardAvoidingView,
@@ -17,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useExpenses } from '../store/expenses-context';
 import { getColors } from '../constants/theme';
 import { CATEGORIES, getCategoryLabel } from '../constants/categories';
+import { confirmAction } from '../util/confirm';
 
 function validate(values) {
   const errors = {};
@@ -60,18 +60,37 @@ function GerenciarDespesa({ route, navigation }) {
   const [showPicker, setShowPicker] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
 
+  function confirmDelete() {
+    confirmAction({
+      title: 'Excluir despesa',
+      message: 'Deseja realmente excluir esta despesa?',
+      confirmText: 'Excluir',
+      onConfirm: () => {
+        deleteExpense(expenseId);
+        navigation.goBack();
+      },
+    });
+  }
+
+  const confirmDeleteRef = useRef(confirmDelete);
+  confirmDeleteRef.current = confirmDelete;
+
   useLayoutEffect(() => {
     navigation.setOptions({
       title: isEditing ? 'Editar despesa' : 'Nova despesa',
       headerRight: isEditing
         ? () => (
-            <Pressable onPress={confirmDelete} style={{ paddingHorizontal: 8 }}>
+            <Pressable
+              onPress={() => confirmDeleteRef.current()}
+              hitSlop={8}
+              style={{ paddingHorizontal: 8 }}
+            >
               <Ionicons name="trash" size={22} color={colors.danger} />
             </Pressable>
           )
         : undefined,
     });
-  }, [navigation, isEditing, colors.danger, expenseId]);
+  }, [navigation, isEditing, colors.danger]);
 
   function handleChange(field, value) {
     if (field === 'amount') {
@@ -121,20 +140,6 @@ function GerenciarDespesa({ route, navigation }) {
     }
 
     navigation.goBack();
-  }
-
-  function confirmDelete() {
-    Alert.alert('Excluir despesa', 'Deseja realmente excluir esta despesa?', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Excluir',
-        style: 'destructive',
-        onPress: () => {
-          deleteExpense(expenseId);
-          navigation.goBack();
-        },
-      },
-    ]);
   }
 
   function inputStyle(field) {
@@ -241,6 +246,17 @@ function GerenciarDespesa({ route, navigation }) {
         >
           <Text style={styles.saveText}>Salvar</Text>
         </Pressable>
+
+        {isEditing && (
+          <Pressable
+            onPress={confirmDelete}
+            style={[styles.deleteButton, { borderColor: colors.danger }]}
+          >
+            <Text style={[styles.deleteText, { color: colors.danger }]}>
+              Excluir despesa
+            </Text>
+          </Pressable>
+        )}
       </ScrollView>
 
       <Modal
@@ -315,6 +331,17 @@ const styles = StyleSheet.create({
   },
   saveText: {
     color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 16,
+  },
+  deleteButton: {
+    marginTop: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  deleteText: {
     fontWeight: '800',
     fontSize: 16,
   },
